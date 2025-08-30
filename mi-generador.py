@@ -23,7 +23,8 @@ def main():
                 "environment": [
                     "PYTHONUNBUFFERED=1"
                 ],
-                "networks": ["testing_net"]
+                "networks": ["testing_net"],
+                "volumes": ["./server/config.ini:/config.ini"]
             }
         },
         "networks": {
@@ -48,7 +49,8 @@ def main():
                 f"CLI_ID={i}"
             ],
             "networks": ["testing_net"],
-            "depends_on": ["server"]
+            "depends_on": ["server"],
+            "volumes": ["./client/config.yaml:/config.yaml"]
         }
 
     # Guardar YAML
