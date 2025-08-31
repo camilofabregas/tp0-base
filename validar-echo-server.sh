@@ -5,7 +5,7 @@ PUERTO=$(awk -F' = ' '/SERVER_PORT/ {print $2}' server/config.ini | tr -d '[:spa
 # Mensaje de prueba
 TEST_MSG="hola-echo-server"
 
-RESULTADO=$(docker run --rm --network tp0_testing_net --entrypoint sh busybox -c "echo '$TEST_MSG' | nc server 5000")
+RESULTADO=$(docker run --rm --network tp0_testing_net --entrypoint sh busybox -c "echo '$TEST_MSG' | nc server $PUERTO")
 
 if [ "$RESULTADO" = "$TEST_MSG" ]; then
     echo "action: test_echo_server | result: success"
