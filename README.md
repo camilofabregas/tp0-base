@@ -21,7 +21,9 @@ En el archivo de Docker Compose de salida se pueden definir volúmenes, variable
 
 ## Solucion
 
-El primer paso de mi solución fue conservar el .yaml original, renombrándolo como `docker-compose-dev-original.yaml`. Lo mismo con el README.md (renombrado a `README-original.md`).
-Mi decisión para este ejercicio fue la de invocar un subscript de Python, tal como es sugerido en el enunciado y por una cuestión de practicidad. Por eso, primero creé el script de bash tal como se lo muestra en el enunciado `generar-compose.sh`. Este script recibe los parámetros (nombre del archivo de salida y cantidad de clientes) y se encarga de ejecutar el subscript de Python con dichos parámetros. 
+La solución propuesta levanta un contenedor temporal de `busybox` en la misma red de Docker que el servidor (tp0_testing_net). Esto es debido a que incluye `nc` y por lo tanto no requerimos de netcat por separado, además de que permite una conexión interna en Docker para no exponer los puertos del servidor. Por medio de un pipe y con `nc`, enviamos un mensaje al servidor (utilizando su direccion y puerto del archivo de configuracion) y esperamos que la respuesta sea la misma. Esto es validado en la parte final del script.
 
-Nuestro `mi-generador.py` utiliza las librerías sys y yaml (sys para el chequeo de argumentos, y yaml para parsear facilmente el archivo de salida). El script es bastante simple, dado que la primera parte del .yaml no cambia. Toda esa porción del archivo es guardada en el diccionario `compose`. Y finalmente, para los clientes que son variables por parámetro, utilizamos un loop for para ir cargando a cada uno en el diccionario. Respetamos el formato propuesto (client1, client2, client3, etc), tal como lo pide el enunciado. Y finalmente, luego de tener listo el diccionario con nuestra definición de Docker Compose, lo guardamos facilmente gracias a la librería `yaml` utilizando el nombre de salida que fue recibido por parámetro.
+Ejecución:
+```
+./validar-echo-server.sh
+```
