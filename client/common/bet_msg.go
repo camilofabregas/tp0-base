@@ -17,7 +17,7 @@ type Bet struct {
 }
 
 // Create Bet from environment variables
-func NewBetFromEnv() (*Bet, error) {
+func from_env() (*Bet, error) {
 	bet := &Bet{
 		id_agency:    os.Getenv("CLI_ID"),
 		name:         os.Getenv("NOMBRE"),

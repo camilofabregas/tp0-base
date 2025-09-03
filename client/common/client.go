@@ -75,13 +75,36 @@ func (c *Client) StartClientLoop() {
 		// Create the connection the server in every loop iteration. Send an
 		c.createClientSocket()
 
-		// TODO: Modify the send to avoid short-write
-		fmt.Fprintf(
-			c.conn,
-			"[CLIENT %v] Message N°%v\n",
-			c.config.ID,
-			msgID,
+		// Create Bet from env
+		bet, err := from_env()
+		if err != nil {
+			log.Errorf("action: create_bet | result: fail | client_id: %v | msg: %v",
+				c.config.ID,
+				err,
+			)
+			return
+		}
+
+		// Send Bet to the server
+		n, err = c.write_all(bet.to_bytes())
+		if err != nil {
+			log.Errorf("action: send_bet | result: fail | client_id: %v | msg: %v",
+				c.config.ID,
+				err,
+			)
+			return
+		}
+		log.Infof("action: send_bet | result: success | agency: %v | dni: %v | bet: %v",
+			bet.id_agency,
+			bet.dni,
+			bet.bet,
 		)
+
+		if len(bet.ToBytes()) > n {
+			log.Errorf("action: send_bet | result: fail | msg: short_read")
+		}
+
+		// Wait for response from server and close the connection
 		msg, err := bufio.NewReader(c.conn).ReadString('\n')
 		c.conn.Close()
 
@@ -103,4 +126,17 @@ func (c *Client) StartClientLoop() {
 
 	}
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
+}
+
+// To avoid 'short write'
+func (c *Client) write_all(buffer []byte) (int, error) {
+	bytes_sent := 0
+	for bytes_sent < len(buffer) {
+		n, err := c.conn.Write(buffer[bytes_sent:])
+		if err != nil {
+			return bytes_sent, err
+		}
+		bytes_sent += n
+	}
+	return bytes_sent, nil
 }
