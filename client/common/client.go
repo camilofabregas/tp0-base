@@ -86,7 +86,7 @@ func (c *Client) StartClientLoop() {
 		}
 
 		// Send Bet to the server
-		n, err = c.write_all(bet.to_bytes())
+		n, err := c.write_all(bet.to_bytes())
 		if err != nil {
 			log.Errorf("action: send_bet | result: fail | client_id: %v | msg: %v",
 				c.config.ID,
