@@ -99,7 +99,7 @@ func (c *Client) StartClientLoop() {
 			bet.bet,
 		)
 
-		if len(bet.ToBytes()) > n {
+		if len(bet.to_bytes()) > n {
 			log.Errorf("action: send_bet | result: fail | msg: short_read")
 		}
 
