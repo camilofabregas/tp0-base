@@ -78,7 +78,7 @@ func (c *Client) StartClientLoop() {
 		// Create Bet from env
 		bet, err := from_env()
 		if err != nil {
-			fmt.Printf("action: create_bet | result: fail | client_id: %v | msg: %v",
+			fmt.Println("action: create_bet | result: fail | client_id: %v | msg: %v",
 				c.config.ID,
 				err,
 			)
