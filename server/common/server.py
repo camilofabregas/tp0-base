@@ -1,6 +1,7 @@
 import socket
 import logging
 import signal
+from common.utils import Bet, store_bets
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -12,12 +13,6 @@ class Server:
         # Set graceful shutdown flag
         self._shutdown = False
         signal.signal(signal.SIGTERM, self.__handle_sigterm)
-
-    def __handle_sigterm(self, signum, frame):
-        logging.info(f'action: server_shutdown | result: in_progress | signal: {signum}')
-        self._shutdown = True
-        self._server_socket.close()
-        logging.info("action: close_server_socket | result: success")
 
     def run(self):
         """
@@ -46,12 +41,21 @@ class Server:
         client socket will also be closed
         """
         try:
-            # TODO: Modify the receive to avoid short-reads
-            msg = client_sock.recv(1024).rstrip().decode('utf-8')
+            len = self.__read_all(client_sock, 4) # Read 4 bytes (32 bits)
+            len = int.from_bytes(len, "big")
+
+            msg = client_sock.recv(len).rstrip().decode('utf-8')
             addr = client_sock.getpeername()
             logging.info(f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
-            # TODO: Modify the send to avoid short-writes
-            client_sock.send("{}\n".format(msg).encode('utf-8'))
+
+            bet_msg = msg.split('|')
+            bet = Bet(*bet_msg)
+            store_bets([bet])
+            logging.info(f'action: apuesta_almacenada | result: success | dni: {bet.document} | numero: {bet.number}')
+
+            response = "ACK BET\n".encode('utf-8')
+            self.__write_all(client_sock, response)
+            logging.info('action: bet_acknowledged | result: success')
         except OSError as e:
             logging.error("action: receive_message | result: fail | error: {e}")
         finally:
@@ -70,3 +74,16 @@ class Server:
         c, addr = self._server_socket.accept()
         logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
         return c
+
+    def __handle_sigterm(self, signum, frame):
+        logging.info(f'action: server_shutdown | result: in_progress | signal: {signum}')
+        self._shutdown = True
+        self._server_socket.close()
+        logging.info("action: close_server_socket | result: success")
+
+    def __read_all(self, client_sock, length_bytes):
+        buffer = bytearray()
+        while len(buffer) < length_bytes:
+            partial_read = client_sock.recv(length_bytes - len(buffer))
+            buffer.extend(partial_read)
+        return bytes(buffer)

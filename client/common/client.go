@@ -94,8 +94,7 @@ func (c *Client) StartClientLoop() {
 			)
 			return
 		}
-		log.Infof("action: send_bet | result: success | agency: %v | dni: %v | bet: %v",
-			bet.id_agency,
+		log.Infof("action: apuesta_enviada | result: success | dni: %v | numero: %v",
 			bet.dni,
 			bet.bet,
 		)
