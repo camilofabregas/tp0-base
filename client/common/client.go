@@ -60,12 +60,12 @@ func (c *Client) StartClientLoop() {
 
 	go func() {
         <-sigc
-        log.Infof("action: sigterm_received | result: in_progress | client_id: %v | message: Starting graceful shutdown...", c.config.ID)
+        log.Infof("action: sigterm_received | result: in_progress | client_id: %v | msg: Starting client shutdown", c.config.ID)
         if c.conn != nil {
             c.conn.Close()
         }
 
-		log.Infof("action: sigterm_received | result: success | client_id: %v | message: Graceful shudown complete...", c.config.ID)
+		log.Infof("action: shutdown | result: success | client_id: %v", c.config.ID)
 		os.Exit(0)
     }()
 
