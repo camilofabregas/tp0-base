@@ -41,7 +41,7 @@ class Server:
         client socket will also be closed
         """
         try:
-            len = self.__read_all(client_sock, 4) # Read 4 bytes (32 bits)
+            len = self.__read_all(client_sock, 4)
             len = int.from_bytes(len, "big")
 
             msg = client_sock.recv(len).rstrip().decode('utf-8')
@@ -87,3 +87,10 @@ class Server:
             partial_read = client_sock.recv(length_bytes - len(buffer))
             buffer.extend(partial_read)
         return bytes(buffer)
+    
+    def __write_all(self, client_sock, buffer):
+        bytes_written = 0
+        while bytes_written < len(buffer):
+            n = client_sock.send(buffer[bytes_written:])
+            bytes_written += n
+        return bytes_written
