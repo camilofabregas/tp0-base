@@ -48,7 +48,7 @@ class Server:
             addr = client_sock.getpeername()
             logging.info(f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
 
-            bet_msg = msg.split('|')
+            bet_msg = msg.split('#')
             bet = Bet(*bet_msg)
             store_bets([bet])
             logging.info(f'action: apuesta_almacenada | result: success | dni: {bet.document} | numero: {bet.number}')
