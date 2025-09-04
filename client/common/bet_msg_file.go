@@ -72,7 +72,7 @@ func (br *BetLoader) LoadBetBatch() ([]byte, uint32, bool, error) {
 		lineCount++
 	}
 
-	return buffer.Bytes(), uint32(buffer.Len()), nil
+	return buffer.Bytes(), uint32(buffer.Len()), eof, nil
 }
 
 // Close file after reading all the batches.
