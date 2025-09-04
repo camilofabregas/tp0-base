@@ -87,6 +87,11 @@ func (c *Client) StartClientLoop() {
 			log.Errorf("action: batch_read | result: fail")
 			return
 		}
+		// EOF del server
+        if bytes_total == 0 {
+            c.conn.Close()
+            break
+        }
 		log.Infof("action: batch_read | result: success")
 
 		len_bytes := make([]byte, 4) // 4 bytes (32 bits)
@@ -131,6 +136,7 @@ func (c *Client) StartClientLoop() {
 			)
 		}
 
+		// EOF archivo
 		if eof {
 			log.Infof("action: envio_completado | result: success")
 			c.conn.Close()
