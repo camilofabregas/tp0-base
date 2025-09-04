@@ -60,7 +60,7 @@ func (br *BetLoader) LoadBetBatch() ([]byte, uint32, bool, error) {
 		}
 
 		bet := Bet{
-			id_agency:   br.agencyID,
+			id_agency:   br.agency_id,
 			name:  record[0],
 			surname:   record[1],
 			dni: record[2],
