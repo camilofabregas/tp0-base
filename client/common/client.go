@@ -144,6 +144,51 @@ func (c *Client) StartClientLoop() {
 		}
 	}
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
+	c.GetMyWinners()
+}
+
+// Send a last message to the server to get the list of winners for my agency (if there are any)
+func (c *Client) GetMyWinners() {
+	c.createClientSocket()
+	
+	// Send empty message to let server know we are ready for the draw.
+	emptyMsg := make([]byte, 4)
+	binary.BigEndian.PutUint32(emptyMsg, 0)
+	n, err := c.WriteAll(emptyMsg)
+	log.Infof("action: last_msg_sent | result: success")
+	if len(emptyMsg) > n {
+		log.Errorf("action: last_msg_sent | result: fail | short_write")
+	}
+
+	// Send our agency ID for the draw
+	id_agency, err := strconv.Atoi(c.config.ID)
+	id_agency := make([]byte, 4)
+	binary.BigEndian.PutUint32(id_agency, uint32(id_agency))
+	m, err := c.WriteAll(id_agency)
+	log.Infof("action: last_msg_sent | result: success")
+	if len(id_agency) > m {
+		log.Errorf("action: last_msg_sent | result: fail | short_write")
+	}
+
+	// Receive the winners from socket
+	msg, err := bufio.NewReader(c.conn).ReadString('\n')
+	if err != nil {
+		log.Errorf("action: consulta_ganadores | result: fail | client_id: %v | error: %v",
+			c.config.ID,
+			err,
+		)
+		return
+	}
+	winner_count := len(strings.Split(string(msg), "|"))
+	if msg == "\n" {
+		winner_count = 0
+	}
+	
+	log.Infof("action: consulta_ganadores | result: success | cant_ganadores: %v",
+		winner_count,
+	)
+
+	c.conn.Close()
 }
 
 // To avoid 'short write'
