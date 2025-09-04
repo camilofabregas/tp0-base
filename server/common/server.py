@@ -41,10 +41,10 @@ class Server:
         client socket will also be closed
         """
         try:
-            len = self.__read_all(client_sock, 4)
-            len = int.from_bytes(len, "big")
+            len_bytes = self.__read_all(client_sock, 4)
+            len_bytes = int.from_bytes(len_bytes, "big")
 
-            msg = self.__read_all(client_sock, len).rstrip().decode('utf-8')
+            msg = self.__read_all(client_sock, len_bytes).rstrip().decode('utf-8')
             addr = client_sock.getpeername()
             logging.info(f'action: receive_message | result: success | ip: {addr[0]}')
 
@@ -96,10 +96,10 @@ class Server:
         self._server_socket.close()
         logging.info("action: close_server_socket | result: success")
 
-    def __read_all(self, client_sock, length_bytes):
+    def __read_all(self, client_sock, len_bytes):
         buffer = bytearray()
-        while len(buffer) < length_bytes:
-            partial_read = client_sock.recv(length_bytes - len(buffer))
+        while len(buffer) < len_bytes:
+            partial_read = client_sock.recv(len_bytes - len(buffer))
             buffer.extend(partial_read)
         return bytes(buffer)
     
