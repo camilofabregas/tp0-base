@@ -81,7 +81,8 @@ class Server:
         except OSError as e:
             logging.error("action: receive_message | result: fail | error: {e}")
         finally:
-            client_sock.close()
+            if len_bytes != 0:
+                client_sock.close()
 
     def __accept_new_connection(self):
         """
