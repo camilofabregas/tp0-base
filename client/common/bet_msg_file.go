@@ -68,7 +68,7 @@ func (br *BetLoader) LoadBetBatch() ([]byte, uint32, bool, error) {
 			bet:  record[4],
 		}
 
-		buffer.Write(bet.ToBytes())
+		buffer.Write(bet.to_bytes())
 		lineCount++
 	}
 
