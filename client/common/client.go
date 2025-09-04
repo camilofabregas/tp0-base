@@ -89,9 +89,9 @@ func (c *Client) StartClientLoop() {
 		}
 		log.Infof("action: batch_read | result: success")
 
-		len := make([]byte, 4) // 4 bytes (32 bits)
-		binary.BigEndian.PutUint32(len, bytes_total)
-		batch := append(len, data...)
+		len_bytes := make([]byte, 4) // 4 bytes (32 bits)
+		binary.BigEndian.PutUint32(len_bytes, bytes_total)
+		batch := append(len_bytes, data...)
 
 		// Send Bet Batch to the server
 		n, err := c.write_all(batch)
