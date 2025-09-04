@@ -44,6 +44,10 @@ class Server:
             len_bytes = self.__read_all(client_sock, 4)
             len_bytes = int.from_bytes(len_bytes, "big")
 
+            if len_bytes == 0:
+                logging.info("action: receive_message | result: eof | msg: empty batch received, closing connection")
+                return
+
             msg = self.__read_all(client_sock, len_bytes).rstrip().decode('utf-8')
             addr = client_sock.getpeername()
             logging.info(f'action: receive_message | result: success | ip: {addr[0]}')
