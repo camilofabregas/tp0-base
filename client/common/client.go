@@ -118,7 +118,7 @@ func (c *Client) StartClientLoop() {
 			return
 		}
 
-		if msg == "ACK BET\n" {
+		if msg == "ACK BATCH\n" {
 			log.Infof("action: batch_acknowledged | result: success | client_id: %v | msg: %v",
 				c.config.ID,
 				string(msg),
