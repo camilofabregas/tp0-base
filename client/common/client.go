@@ -119,6 +119,12 @@ func (c *Client) StartClientLoop() {
 			return
 		}
 
+		if eof {
+			log.Infof("action: envio_completado | result: success")
+			c.conn.Close()
+			break
+		}
+
 		if msg == "ACK BATCH\n" {
 			log.Infof("action: batch_acknowledged | result: success | client_id: %v | msg: %v",
 				c.config.ID,
@@ -129,12 +135,6 @@ func (c *Client) StartClientLoop() {
 				c.config.ID,
 				string(msg),
 			)
-		}
-
-		if eof {
-			log.Infof("action: envio_completado | result: success")
-			c.conn.Close()
-			break
 		}
 	}
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
