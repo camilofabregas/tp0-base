@@ -12,7 +12,6 @@ class Server:
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
-        self._clients = []
         self._clients_ready = {}
 
         # Set graceful shutdown flag
@@ -31,7 +30,6 @@ class Server:
         while not self._shutdown:
             try:
                 client_sock = self.__accept_new_connection()
-                self._clients.append(client_sock)
                 self.__handle_client_connection(client_sock)
             except OSError as e:
                 if not self._shutdown:
@@ -103,11 +101,8 @@ class Server:
     def __handle_sigterm(self, signum, frame):
         logging.info(f'action: server_shutdown | result: in_progress | signal: {signum}')
         self._shutdown = True
-        for client in self._clients:
-            client.close()
-            logging.info('action: client_shutdown | result: success')
-        if self._server_socket:
-            self._server_socket.close()
+        self._server_socket.close()
+        logging.info("action: close_server_socket | result: success")
 
     def __handle_client_ready(self, client_sock, agency_id):
         # Add this client
