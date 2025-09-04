@@ -81,9 +81,10 @@ func (c *Client) StartClientLoop() {
 		os.Exit(0)
     }()
 
+	// Connect to server
+	c.createClientSocket()
+
 	for {
-		// Create the connection the server in every loop iteration. Send an
-		c.createClientSocket()
 		data, bytes_total, eof, err := betLoader.LoadBetBatch()
 		if err != nil {
 			log.Errorf("action: batch_read | result: fail")
@@ -147,12 +148,13 @@ func (c *Client) StartClientLoop() {
 	}
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
 	c.GetMyWinners()
+
+	// Disconnect from server
+	c.conn.Close()
 }
 
 // Send a last message to the server to get the list of winners for my agency (if there are any)
 func (c *Client) GetMyWinners() {
-	c.createClientSocket()
-	
 	// Send empty message to let server know we are ready for the draw.
 	emptyMsg := make([]byte, 4)
 	binary.BigEndian.PutUint32(emptyMsg, 0)
@@ -189,8 +191,6 @@ func (c *Client) GetMyWinners() {
 	log.Infof("action: consulta_ganadores | result: success | cant_ganadores: %v",
 		winner_count,
 	)
-
-	c.conn.Close()
 }
 
 // To avoid 'short write'

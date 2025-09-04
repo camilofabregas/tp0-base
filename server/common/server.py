@@ -1,3 +1,5 @@
+import multiprocessing    
+from multiprocessing import Process, Manager
 import socket
 import logging
 import signal
@@ -12,7 +14,14 @@ class Server:
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
-        self._clients_ready = {}
+
+        # Manager for shared dictionary across proccesses
+        self._manager = Manager()
+        self._clients_ready = self._manager.dict()
+        # Lock for non thread-safe functions
+        self._bets_lock = multiprocessing.Lock()
+        # Child client processes list
+        self._client_processes = []
 
         # Set graceful shutdown flag
         self._shutdown = False
@@ -30,7 +39,10 @@ class Server:
         while not self._shutdown:
             try:
                 client_sock = self.__accept_new_connection()
-                self.__handle_client_connection(client_sock)
+                # New process will handle this client
+                child_process = Process(target = self.__handle_client_connection, args=(client_sock,))
+                child_process.start()
+                self._client_processes.append(child_process)
             except OSError as e:
                 if not self._shutdown:
                     logging.error(f'action: accept_connection | result: fail | error: {e}')
@@ -44,45 +56,43 @@ class Server:
         If a problem arises in the communication with the client, the
         client socket will also be closed
         """
-        try:
-            len_bytes = self.__read_all(client_sock, 4)
-            len_bytes = int.from_bytes(len_bytes, "big")
-
-            # Client ready for draw
-            if len_bytes == 0:
-                id_agency_bytes = self.__read_all(client_sock, 4)
-                id_agency = int.from_bytes(id_agency_bytes, "big")
-                self.__handle_client_ready(client_sock, id_agency)
-                return
-
-            msg = self.__read_all(client_sock, len_bytes).rstrip().decode('utf-8')
-            addr = client_sock.getpeername()
-            logging.info(f'action: receive_message | result: success | ip: {addr[0]}')
-
+        while True:
             try:
-                bets_msg = msg.split("\n")
-                for i, bet in enumerate(bets_msg):
-                    bet_data = bet.split("#")
-                    bet = Bet(*bet_data)
-                    bets_msg[i] = bet
-                store_bets(bets_msg)
-                logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets_msg)}')
+                len_bytes = self.__read_all(client_sock, 4)
+                len_bytes = int.from_bytes(len_bytes, "big")
 
-                response = "ACK BATCH\n".encode('utf-8')
-                self.__write_all(client_sock, response)
-                logging.info('action: bet_acknowledged | result: success')
-            
-            except:
-                logging.error(f'action: apuesta_recibida | result: fail | cantidad: {len(bets_msg)}')
-                response = "ERR BATCH\n".encode('utf-8')
-                self.__write_all(client_sock, response)
-                logging.info('action: error_sent | result: success')
+                # Client ready for draw
+                if len_bytes == 0:
+                    id_agency_bytes = self.__read_all(client_sock, 4)
+                    id_agency = int.from_bytes(id_agency_bytes, "big")
+                    self.__handle_client_ready(client_sock, id_agency)
+                    return
 
-        except OSError as e:
-            logging.error("action: receive_message | result: fail | error: {e}")
-        finally:
-            if len_bytes != 0:
-                client_sock.close()
+                msg = self.__read_all(client_sock, len_bytes).rstrip().decode('utf-8')
+                addr = client_sock.getpeername()
+                logging.info(f'action: receive_message | result: success | ip: {addr[0]}')
+
+                try:
+                    bets_msg = msg.split("\n")
+                    for i, bet in enumerate(bets_msg):
+                        bet_data = bet.split("#")
+                        bet = Bet(*bet_data)
+                        bets_msg[i] = bet
+                    store_bets(bets_msg)
+                    logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets_msg)}')
+
+                    response = "ACK BATCH\n".encode('utf-8')
+                    self.__write_all(client_sock, response)
+                    logging.info('action: bet_acknowledged | result: success')
+                
+                except:
+                    logging.error(f'action: apuesta_recibida | result: fail | cantidad: {len(bets_msg)}')
+                    response = "ERR BATCH\n".encode('utf-8')
+                    self.__write_all(client_sock, response)
+                    logging.info('action: error_sent | result: success')
+
+            except OSError as e:
+                logging.error("action: receive_message | result: fail | error: {e}")
 
     def __accept_new_connection(self):
         """
@@ -104,18 +114,27 @@ class Server:
         self._server_socket.close()
         logging.info("action: close_server_socket | result: success")
 
-    def __handle_client_ready(self, client_sock, agency_id):
-        # Add this client
-        client_address = client_sock.getpeername()
-        self._clients_ready[agency_id] = [client_sock, client_address]
-        logging.info(f'action: new_client_ready | result: success | cant: {len(self._clients_ready)} | clients: {self._clients_ready.keys()}')
+        if self._server_socket:
+            self._server_socket.close()
 
-        if len(self._clients_ready) == CLIENT_COUNT:
-            logging.info('action: sorteo | result: success')
-            self.__handle_draw()
+        for client_process in self._client_processes:
+            client_process.terminate()
+
+    def __handle_client_ready(self, client_sock, agency_id):
+        with self._manager.Lock():
+            # Add this client
+            client_address = client_sock.getpeername()
+            self._clients_ready[agency_id] = [client_sock, client_address]
+            logging.info(f'action: new_client_ready | result: success | cant: {len(self._clients_ready)} | clients: {self._clients_ready.keys()}')
+
+            if len(self._clients_ready) == CLIENT_COUNT:
+                logging.info('action: sorteo | result: success')
+                self.__handle_draw()
 
     def __handle_draw(self):
-        bets = load_bets()
+        # Use lock to make user only one thread at a time loads bets (not thread-safe) (only one client should do it anyway)
+        with self._bets_lock:
+            bets = load_bets()
         winning_bets = {}
         winning_bets_count = 0
         for bet in bets:
