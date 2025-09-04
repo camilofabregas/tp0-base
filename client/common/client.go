@@ -156,7 +156,7 @@ func (c *Client) GetMyWinners() {
 	// Send empty message to let server know we are ready for the draw.
 	emptyMsg := make([]byte, 4)
 	binary.BigEndian.PutUint32(emptyMsg, 0)
-	n, err := c.WriteAll(emptyMsg)
+	n, err := c.write_all(emptyMsg)
 	log.Infof("action: last_msg_sent | result: success")
 	if len(emptyMsg) > n {
 		log.Errorf("action: last_msg_sent | result: fail | short_write")
@@ -164,11 +164,11 @@ func (c *Client) GetMyWinners() {
 
 	// Send our agency ID for the draw
 	id_agency, err := strconv.Atoi(c.config.ID)
-	id_agency := make([]byte, 4)
-	binary.BigEndian.PutUint32(id_agency, uint32(id_agency))
-	m, err := c.WriteAll(id_agency)
+	id_agency_bytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(id_agency_bytes, uint32(id_agency))
+	m, err := c.write_all(id_agency_bytes)
 	log.Infof("action: last_msg_sent | result: success")
-	if len(id_agency) > m {
+	if len(id_agency_bytes) > m {
 		log.Errorf("action: last_msg_sent | result: fail | short_write")
 	}
 
