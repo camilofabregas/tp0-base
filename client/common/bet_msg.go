@@ -1,7 +1,6 @@
 package common
 
 import (
-	"encoding/binary"
 	"fmt"
 	"os"
 )
@@ -38,9 +37,10 @@ func from_env() (*Bet, error) {
 // Convert Bet to bytes for sending
 func (b *Bet) to_bytes() []byte {
 	msg := []byte(fmt.Sprintf("%s#%s#%s#%s#%s#%s\n", b.id_agency, b.name, b.surname, b.dni, b.birth_date, b.bet))
-	len := uint32(len(msg))
-	len_bytes := make([]byte, 4)
-	binary.BigEndian.PutUint32(len_bytes, len)
-	result := append(len_bytes, msg...)
-	return result
+	return msg
+	//len := uint32(len(msg))
+	//len_bytes := make([]byte, 4)
+	//binary.BigEndian.PutUint32(len_bytes, len)
+	//result := append(len_bytes, msg...)
+	//return result
 }
