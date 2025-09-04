@@ -59,7 +59,7 @@ func (c *Client) StartClientLoop() {
 	sigc := make(chan os.Signal, 1)
     signal.Notify(sigc, syscall.SIGTERM)
 
-	betLoader, err := LoadBets(c.config.BatchMaxAmount)
+	betLoader, err := LoadBets(c.config.MaxBetsPerBatch)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
