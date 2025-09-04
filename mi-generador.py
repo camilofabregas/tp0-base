@@ -56,6 +56,7 @@ def main():
             ]
         }
 
+    compose["services"]["server"]["environment"].append(f"CLIENT_COUNT={cantidad_clientes}")
     # Guardar YAML
     with open(archivo_salida, "w", encoding="utf-8") as f:
         yaml.dump(compose, f, sort_keys=False)
