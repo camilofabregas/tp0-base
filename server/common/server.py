@@ -44,25 +44,33 @@ class Server:
             len = self.__read_all(client_sock, 4)
             len = int.from_bytes(len, "big")
 
-            msg = client_sock.recv(len).rstrip().decode('utf-8')
+            msg = self.__read_all(client_sock, len).rstrip().decode('utf-8')
             addr = client_sock.getpeername()
-            logging.info(f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
+            logging.info(f'action: receive_message | result: success | ip: {addr[0]}')
 
             #bet_msg = msg.split('#')
             #bet = Bet(*bet_msg)
             #store_bets([bet])
             #logging.info(f'action: apuesta_almacenada | result: success | dni: {bet.document} | numero: {bet.number}')
-            bets_msg = msg.split("\n")
-            for i, bet in enumerate(bets_msg):
-                bet_data = bet.split("#")
-                bet = Bet(*bet_data)
-                bets_msg[i] = bet
-            store_bets(bets_msg)
-            logging.info(f'action: batch_stored | result: success | bets: {len(bets_msg)}')
+            try:
+                bets_msg = msg.split("\n")
+                for i, bet in enumerate(bets_msg):
+                    bet_data = bet.split("#")
+                    bet = Bet(*bet_data)
+                    bets_msg[i] = bet
+                store_bets(bets_msg)
+                logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets_msg)}')
 
-            response = "ACK BATCH\n".encode('utf-8')
-            self.__write_all(client_sock, response)
-            logging.info('action: bet_acknowledged | result: success')
+                response = "ACK BATCH\n".encode('utf-8')
+                self.__write_all(client_sock, response)
+                logging.info('action: bet_acknowledged | result: success')
+            
+            except:
+                logging.error(f'action: apuesta_recibida | result: fail | cantidad: {len(bets_msg)}')
+                response = "ERR BATCH\n".encode('utf-8')
+                self.__write_all(client_sock, response)
+                logging.info('action: error_sent | result: success')
+
         except OSError as e:
             logging.error("action: receive_message | result: fail | error: {e}")
         finally:

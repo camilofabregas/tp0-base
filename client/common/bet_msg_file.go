@@ -18,7 +18,7 @@ type BetLoader struct {
 }
 
 // Load bets from CSV files using our BetLoader
-func LoadBets() (*BetLoader, error) {
+func LoadBets(max_bets_per_batch int) (*BetLoader, error) {
 	agency_id := os.Getenv("CLI_ID")
 	if agency_id == "" {
 		return nil, fmt.Errorf("Please define CLI_ID env variable")
@@ -41,7 +41,7 @@ func LoadBets() (*BetLoader, error) {
 
 // Read 135 lines (batch) and return a byte buffer and it's total length
 // Reads from the last point read
-func (br *BetLoader) LoadBetBatch() ([]byte, uint32, error) {
+func (br *BetLoader) LoadBetBatch() ([]byte, uint32, bool, error) {
 	var buffer bytes.Buffer
 	eof := false
 	lineCount := 0
