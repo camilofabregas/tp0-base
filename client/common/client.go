@@ -89,6 +89,12 @@ func (c *Client) StartClientLoop() {
 		}
 		log.Infof("action: batch_read | result: success")
 
+		if eof {
+			log.Infof("action: envio_completado | result: success")
+			c.conn.Close()
+			break
+		}
+
 		len_bytes := make([]byte, 4) // 4 bytes (32 bits)
 		binary.BigEndian.PutUint32(len_bytes, bytes_total)
 		batch := append(len_bytes, data...)
@@ -129,12 +135,6 @@ func (c *Client) StartClientLoop() {
 				c.config.ID,
 				string(msg),
 			)
-		}
-
-		if eof {
-			log.Infof("action: envio_completado | result: success")
-			c.conn.Close()
-			break
 		}
 	}
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
