@@ -92,7 +92,6 @@ func (c *Client) StartClientLoop() {
 		}
 		// EOF del server
         if bytes_total == 0 {
-            c.conn.Close()
             break
         }
 		log.Infof("action: batch_read | result: success")
@@ -142,7 +141,6 @@ func (c *Client) StartClientLoop() {
 		// EOF archivo
 		if eof {
 			log.Infof("action: envio_completado | result: success")
-			c.conn.Close()
 			break
 		}
 	}
